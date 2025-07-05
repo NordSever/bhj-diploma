@@ -14,7 +14,13 @@ class AccountsWidget {
    * необходимо выкинуть ошибку.
    * */
   constructor( element ) {
+    if(!element) {
+      throw new Error('Ошибка');
+    }
 
+    this.element = element;
+    this.registerEvents();
+    this.update();
   }
 
   /**
@@ -25,7 +31,21 @@ class AccountsWidget {
    * вызывает AccountsWidget.onSelectAccount()
    * */
   registerEvents() {
-
+    this.element.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      
+      if (e.target.closest('.create-account')) {
+        App.getModal('createAccount').open();
+        return;
+      }
+      
+      
+      const accountElement = e.target.closest('.account');
+      if (accountElement) {
+        this.onSelectAccount(accountElement);
+      }
+    });
   }
 
   /**
@@ -39,7 +59,19 @@ class AccountsWidget {
    * метода renderItem()
    * */
   update() {
-
+    if (!User.current()) {
+      return;
+    }
+    
+    
+    Account.list(User.current(), (err, response) => {
+      if (response && response.data) {
+        
+        this.clear();
+        
+        response.data.forEach(item => this.renderItem(item));
+      }
+    });
   }
 
   /**
@@ -48,7 +80,8 @@ class AccountsWidget {
    * в боковой колонке
    * */
   clear() {
-
+    const accounts = this.element.querySelectorAll('.account');
+    accounts.forEach(account => account.remove());
   }
 
   /**
@@ -58,8 +91,17 @@ class AccountsWidget {
    * счёта класс .active.
    * Вызывает App.showPage( 'transactions', { account_id: id_счёта });
    * */
-  onSelectAccount( element ) {
-
+  onSelectAccount(element) {
+    this.element.querySelectorAll('.account').forEach(account => {
+      account.classList.remove('active');
+    });
+    
+    
+    element.classList.add('active');
+    
+    
+    let accountId = element.dataset.id;
+    App.showPage('transactions', {account_id: accountId});
   }
 
   /**
@@ -68,7 +110,21 @@ class AccountsWidget {
    * item - объект с данными о счёте
    * */
   getAccountHTML(item){
-
+     
+    const formattedSum = item.sum.toLocaleString('ru-RU', { 
+      style: 'currency', 
+      currency: 'RUB',
+      minimumFractionDigits: 2
+    });
+    
+    return `
+      <li class="account" data-id="${item.id}">
+        <a href="#">
+          <span>${item.name}</span> /
+          <span>${formattedSum}</span>
+        </a>
+      </li>
+    `;
   }
 
   /**
@@ -78,6 +134,8 @@ class AccountsWidget {
    * и добавляет его внутрь элемента виджета
    * */
   renderItem(data){
-
+    console.log(data);
+    const html = this.getAccountHTML(data);
+    this.element.insertAdjacentHTML('beforeend', html);
   }
 }

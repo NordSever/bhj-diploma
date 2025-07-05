@@ -12,7 +12,12 @@ class Modal {
    * необходимо выкинуть ошибку.
    * */
   constructor(element){
-
+    if (!element) {
+      throw new Error('Необходимо указать элемент соответствующий выбранному модальному окну')
+    }
+    
+    this.element = element;
+    this.registerEvents();
   }
 
   /**
@@ -21,27 +26,33 @@ class Modal {
    * (с помощью метода Modal.onClose)
    * */
   registerEvents() {
-
-  }
+    const buttonsCloseModal = this.element.querySelectorAll('[data-dismiss="modal"]');
+    
+    buttonsCloseModal.forEach(button => {
+      button.addEventListener('click', (e) => this.onClose(e));
+    });
+    }
+  
 
   /**
    * Срабатывает после нажатия на элементы, закрывающие окно.
    * Закрывает текущее окно (Modal.close())
    * */
   onClose(e) {
-
+    e.preventDefault();
+    this.close();
   }
   /**
    * Открывает окно: устанавливает CSS-свойство display
    * со значением «block»
    * */
   open() {
-
+    this.element.style.display = 'block';
   }
   /**
    * Закрывает окно: удаляет CSS-свойство display
    * */
   close(){
-
+    this.element.style.display = 'none';
   }
 }
